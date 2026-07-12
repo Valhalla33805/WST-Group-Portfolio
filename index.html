@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WST GROUP 6</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Audiowide&family=Rajdhani:wght@400;700&display=swap');
+        :root { --neon: #00f3ff; }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #020508; color: #fff; font-family: 'Rajdhani', sans-serif; 
+            min-height: 100vh; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; overflow-x: hidden; 
+        }
+
+        /* Vortex Overlay */
+        #vortex-transition {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, #020508 20%, #000 100%);
+            z-index: 9999; display: none; clip-path: circle(0% at 50% 50%);
+            transition: clip-path 1.5s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        #vortex-transition.active { display: block; clip-path: circle(150% at 50% 50%); }
+        #vortex-canvas { width: 100%; height: 100%; }
+
+        canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+
+        .header { margin: 50px 0; font-family: 'Audiowide'; color: var(--neon); font-size: 3rem; text-shadow: 0 0 20px var(--neon); letter-spacing: 5px; }
+
+        #hub { 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 25px; 
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); /* This adds a tiny 'bounce' */
+}
+        .card { 
+            background: rgba(10, 15, 20, 0.7) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 20px; 
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); 
+            overflow: hidden; position: relative; z-index: 10;
+        }
+        .card:hover { transform: translateY(-15px); border-color: var(--neon); box-shadow: 0 10px 30px rgba(0, 243, 255, 0.2); }
+
+        .card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+        .card.edge { width: 220px; height: 330px; transform: scale(0.85); filter: brightness(0.3); }
+        .card.side { width: 280px; height: 420px; transform: scale(0.95); filter: brightness(0.6); }
+        /* Glitch Hover Effect */
+        .card:hover {
+            animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+            border-color: var(--neon);
+        }
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        /* Update the active card styling */
+.card.active { 
+    width: 360px; height: 540px; 
+    transform: scale(1.05); 
+    z-index: 10;
+    border: 2px solid var(--neon) !important; /* Slim neon border */
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.5); /* Base glow */
+    animation: activePulse 2s ease-in-out infinite; /* Breathing animation */
+}
+
+/* The Breathing Animation */
+@keyframes activePulse {
+    0% { box-shadow: 0 0 10px rgba(0, 243, 255, 0.4); }
+    50% { box-shadow: 0 0 30px rgba(0, 243, 255, 0.8); }
+    100% { box-shadow: 0 0 10px rgba(0, 243, 255, 0.4); }
+}
+
+        .portfolio-btn {
+            position: absolute; bottom: 30px; background: transparent;
+            color: var(--neon); border: 1px solid var(--neon);
+            padding: 15px 30px; text-decoration: none; font-weight: 700;
+            text-transform: uppercase; border-radius: 8px; letter-spacing: 3px;
+            transition: all 0.4s ease; z-index: 20;
+        }
+        .portfolio-btn:hover { background: var(--neon); color: #020508; box-shadow: 0 0 30px var(--neon); transform: scale(1.1); }
+        .card .portfolio-btn { display: none; }
+        .card.active .portfolio-btn { display: block; }
+
+        /* About Section */
+        .about-section {
+            width: 80%; max-width: 800px; margin: 60px auto; padding: 40px;
+            background: rgba(10, 15, 20, 0.7); backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 243, 255, 0.2); border-radius: 20px;
+            text-align: center; z-index: 5;
+        }
+        .about-section h2 { font-family: 'Audiowide'; color: var(--neon); margin-bottom: 20px; letter-spacing: 2px; }
+        .about-section p { font-size: 1.2rem; line-height: 1.6; color: rgba(255, 255, 255, 0.8); }
+
+        @media (max-width: 768px) {
+            .header { font-size: 2rem; }
+            .card { width: 140px !important; height: 210px !important; }
+            .card.active { width: 200px !important; height: 300px !important; }
+            .portfolio-btn { padding: 8px 16px; font-size: 0.8rem; bottom: 15px; }
+        }
+       #audio-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #020508; z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; text-align: center;
+    transition: transform 0.8s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.8s;
+}
+
+.loader-content h1 { font-family: 'Audiowide'; color: var(--neon); font-size: 3rem; margin-bottom: 10px; }
+.loader-content p { font-family: 'Rajdhani'; color: #fff; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 4px; opacity: 0.7; }
+
+/* The Warp effect */
+.warp-entry {
+    transform: scale(3); /* Zoom into the center */
+    filter: blur(10px) brightness(2); /* Light bloom effect */
+    opacity: 0;
+    transition: transform 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19), opacity 0.6s;
+}
+
+/* Add a "scanline overlay" that intensifies on click */
+.warp-overlay {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: linear-gradient(rgba(0,0,0,0) 50%, rgba(255,255,255,0.1) 50%);
+    background-size: 100% 4px;
+    z-index: 10001; pointer-events: none; opacity: 0;
+    transition: opacity 0.3s;
+}
+/* Broken/Glitchy Background Overlay */
+.glitch-background {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    /* Creates a static noise pattern */
+    background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+    opacity: 0.15;
+    pointer-events: none;
+    animation: glitchFlicker 0.15s infinite;
+}
+
+@keyframes glitchFlicker {
+    0% { opacity: 0.1; }
+    50% { opacity: 0.25; }
+    100% { opacity: 0.1; }
+}
+
+/* Broken Pixel Shards (JS will spawn these) */
+.pixel-shard {
+    position: absolute;
+    background: var(--neon);
+    width: 4px; height: 4px;
+    pointer-events: none;
+    animation: drop 1s linear forwards;
+}
+
+@keyframes drop {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(500px); opacity: 0; }
+}
+    </style>
+</head>
+<body>
+<div id="audio-overlay" onclick="startSystem()">
+    <div class="loader-content">
+        <h1>CLICK TO INITIALIZE GROUP PORTFOLIO<h1>
+    </div>
+</div>
+<div id="warp-overlay" class="warp-overlay"></div>
+
+<audio id="bg-music" loop>
+    <source src="bgmusic.mp3" type="audio/mpeg">
+</audio>
+    <div id="vortex-transition"><canvas id="vortex-canvas"></canvas></div>
+    <canvas id="matrix"></canvas>
+    
+    <h1 class="header">WST BSIT-3C GROUP 6</h1>
+
+    <div id="hub">
+        <div class="card edge" onclick="select(this)"><img src="Jay.jpg"><a href="Myportfolio.html" class="portfolio-btn">View Portfolio</a></div>
+        <div class="card side" onclick="select(this)"><img src="Me.png"><a href="Myportfolio.html" class="portfolio-btn">View Portfolio</a></div>
+        <div class="card active" onclick="select(this)"><img src="jambi.png"><a href="Myportfolio.html" class="portfolio-btn">View Portfolio</a></div>
+        <div class="card side" onclick="select(this)"><img src="Mae.jpg"><a href="Myportfolio.html" class="portfolio-btn">View Portfolio</a></div>
+        <div class="card edge" onclick="select(this)"><img src="Rom.jpg"><a href="Myportfolio.html" class="portfolio-btn">View Portfolio</a></div>
+    </div>
+
+    <section class="about-section">
+    <h2>About Our Group</h2>
+    <p>
+        We are GROUP 6, a collective of passionate learners and aspiring architects of the digital realm. 
+        What began as a shared challenge in the classroom has evolved into a dedicated pursuit of technical 
+        excellence and creative expression. We believe that technology is more than just code; it is a 
+        medium through which we bridge the gap between complex, data-driven logic and fluid, human-centric 
+        design. Every line of code we write, every interface we polish, and every system we deploy is a 
+        testament to our collective growth and our commitment to building meaningful digital experiences. 
+        We aren't just here to write programs—we are here to learn, to innovate, and to support one another 
+        as we navigate the evolving landscape of web development. Welcome to our hub, and thank you for 
+        being a part of our journey.
+    </p>
+</section>
+    <script>
+        const hub = document.getElementById('hub');
+        function select(card) {
+    if (card.classList.contains('active')) return; // Don't do anything if it's already active
+
+    const hub = document.getElementById('hub');
+    const cards = Array.from(document.querySelectorAll('.card'));
+    const clickedIndex = cards.indexOf(card);
+    const diff = clickedIndex - 2;
+
+    // Shift the order
+    for(let i = 0; i < Math.abs(diff); i++) {
+        if (diff > 0) hub.appendChild(hub.firstElementChild);
+        else hub.prepend(hub.lastElementChild);
+    }
+
+    // Update classes instantly
+    document.querySelectorAll('.card').forEach((c, i) => {
+        c.className = 'card';
+        if (i === 2) c.classList.add('active');
+        else if (i === 1 || i === 3) c.classList.add('side');
+        else c.classList.add('edge');
+    });
+}
+
+        const btns = document.querySelectorAll('.portfolio-btn');
+        const vortex = document.getElementById('vortex-transition');
+        btns.forEach(btn => btn.addEventListener('click', (e) => {
+            e.preventDefault(); vortex.classList.add('active'); animateVortex();
+            setTimeout(() => window.location.href = btn.getAttribute('href'), 1500);
+        }));
+
+        function animateVortex() {
+            const cvs = document.getElementById('vortex-canvas'), ctx = cvs.getContext('2d');
+            cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+            let particles = Array.from({length: 250}, () => ({angle: Math.random()*Math.PI*2, dist: Math.random()*cvs.width, speed: Math.random()*0.05+0.02}));
+            function draw() {
+                ctx.fillStyle = 'rgba(2, 5, 8, 0.15)'; ctx.fillRect(0, 0, cvs.width, cvs.height);
+                particles.forEach(p => {
+                    p.dist -= p.speed * 15; p.angle += 0.02;
+                    const x = cvs.width/2 + Math.cos(p.angle) * p.dist, y = cvs.height/2 + Math.sin(p.angle) * p.dist;
+                    ctx.fillStyle = '#00f3ff'; ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI*2); ctx.fill();
+                });
+                if(vortex.classList.contains('active')) requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        const canvas = document.getElementById('matrix'), ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const drops = Array(Math.floor(canvas.width/15)).fill(1);
+        setInterval(() => {
+            ctx.fillStyle = 'rgba(2, 5, 8, 0.05)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00f3ff';
+            drops.forEach((d, i) => {
+                ctx.fillText('01', i * 15, d * 15);
+                if (d * 15 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            });
+        }, 33);
+              // Add this inside your <script> tag
+function spawnBrokenPixels() {
+    const overlay = document.getElementById('audio-overlay');
+    setInterval(() => {
+        if (!overlay) return;
+        const pixel = document.createElement('div');
+        pixel.className = 'pixel-shard';
+        pixel.style.left = Math.random() * 100 + 'vw';
+        pixel.style.top = Math.random() * 100 + 'vh';
+        overlay.appendChild(pixel);
+        setTimeout(() => pixel.remove(), 1000);
+    }, 100);
+}
+
+// Start the effect when the page loads
+spawnBrokenPixels();
+
+  function startSystem() {
+    const audio = document.getElementById('bg-music');
+    const overlay = document.getElementById('audio-overlay');
+    const warp = document.getElementById('warp-overlay');
+    
+    // 1. Start audio
+    audio.volume = 0.4;
+    audio.play();
+
+    // 2. Trigger the "Entry" sequence
+    warp.style.opacity = '1'; // Show scanlines
+    overlay.style.transform = 'skewX(45deg)'; // Screen "tear" effect
+    
+    // 3. Wait for the "tear" to register, then Zoom/Warp in
+    setTimeout(() => {
+        overlay.classList.add('warp-entry');
+        
+        // Final cleanup
+        setTimeout(() => {
+            overlay.remove();
+            warp.remove();
+        }, 600);
+    }, 100);
+}
+    </script>
+</body>
+</html>
