@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WST GROUP 6</title>
+    <!-- Load Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Audiowide&family=Rajdhani:wght@400;700&display=swap');
         :root { --neon: #00f3ff; }
@@ -15,6 +17,9 @@
             align-items: center; justify-content: center; overflow-x: hidden; 
         }
 
+        /* Galaxy Canvas Background */
+        #galaxy-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; }
+
         /* Vortex Overlay */
         #vortex-transition {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -25,17 +30,16 @@
         #vortex-transition.active { display: block; clip-path: circle(150% at 50% 50%); }
         #vortex-canvas { width: 100%; height: 100%; }
 
-        canvas { position: fixed; top: 0; left: 0; z-index: -1; }
-
-        .header { margin: 50px 0; font-family: 'Audiowide'; color: var(--neon); font-size: 3rem; text-shadow: 0 0 20px var(--neon); letter-spacing: 5px; }
+        .header { margin: 50px 0; font-family: 'Audiowide'; color: var(--neon); font-size: 3rem; text-shadow: 0 0 20px var(--neon); letter-spacing: 5px; z-index: 10; }
 
         #hub { 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    gap: 25px; 
-    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); /* This adds a tiny 'bounce' */
-}
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 25px; 
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 10;
+        }
         .card { 
             background: rgba(10, 15, 20, 0.7) !important;
             backdrop-filter: blur(10px);
@@ -45,15 +49,16 @@
             cursor: pointer; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); 
             overflow: hidden; position: relative; z-index: 10;
         }
-        .card:hover { transform: translateY(-15px); border-color: var(--neon); box-shadow: 0 10px 30px rgba(0, 243, 255, 0.2); }
-
         .card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
         .card.edge { width: 220px; height: 330px; transform: scale(0.85); filter: brightness(0.3); }
         .card.side { width: 280px; height: 420px; transform: scale(0.95); filter: brightness(0.6); }
+        
         /* Glitch Hover Effect */
         .card:hover {
             animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
             border-color: var(--neon);
+            transform: translateY(-15px);
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.2);
         }
         @keyframes glitch {
             0% { transform: translate(0); }
@@ -64,22 +69,20 @@
             100% { transform: translate(0); }
         }
 
-        /* Update the active card styling */
-.card.active { 
-    width: 360px; height: 540px; 
-    transform: scale(1.05); 
-    z-index: 10;
-    border: 2px solid var(--neon) !important; /* Slim neon border */
-    box-shadow: 0 0 10px rgba(0, 243, 255, 0.5); /* Base glow */
-    animation: activePulse 2s ease-in-out infinite; /* Breathing animation */
-}
+        .card.active { 
+            width: 360px; height: 540px; 
+            transform: scale(1.05); 
+            z-index: 10;
+            border: 2px solid var(--neon) !important; 
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.5); 
+            animation: activePulse 2s ease-in-out infinite; 
+        }
 
-/* The Breathing Animation */
-@keyframes activePulse {
-    0% { box-shadow: 0 0 10px rgba(0, 243, 255, 0.4); }
-    50% { box-shadow: 0 0 30px rgba(0, 243, 255, 0.8); }
-    100% { box-shadow: 0 0 10px rgba(0, 243, 255, 0.4); }
-}
+        @keyframes activePulse {
+            0% { box-shadow: 0 0 10px rgba(0, 243, 255, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(0, 243, 255, 0.8); }
+            100% { box-shadow: 0 0 10px rgba(0, 243, 255, 0.4); }
+        }
 
         .portfolio-btn {
             position: absolute; bottom: 30px; background: transparent;
@@ -108,143 +111,311 @@
             .card.active { width: 200px !important; height: 300px !important; }
             .portfolio-btn { padding: 8px 16px; font-size: 0.8rem; bottom: 15px; }
         }
-       #audio-overlay {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: #020508; z-index: 10000;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; text-align: center;
-    transition: transform 0.8s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.8s;
-}
 
-.loader-content h1 { font-family: 'Audiowide'; color: var(--neon); font-size: 3rem; margin-bottom: 10px; }
-.loader-content p { font-family: 'Rajdhani'; color: #fff; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 4px; opacity: 0.7; }
+        /* Enhanced Splash Audio Overlay */
+        #audio-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, #050b14 0%, #020508 100%);
+            z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; text-align: center;
+            transition: transform 0.8s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.8s;
+            overflow: hidden;
+        }
 
-/* The Warp effect */
-.warp-entry {
-    transform: scale(3); /* Zoom into the center */
-    filter: blur(10px) brightness(2); /* Light bloom effect */
-    opacity: 0;
-    transition: transform 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19), opacity 0.6s;
-}
+        /* Cyberpunk HUD Grid Background on Splash */
+        #audio-overlay::before {
+            content: "";
+            position: absolute; width: 200%; height: 200%;
+            background-image: linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(500px) rotateX(60deg);
+            animation: gridMove 20s linear infinite;
+        }
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(40px); }
+        }
 
-/* Add a "scanline overlay" that intensifies on click */
-.warp-overlay {
-    position: fixed; top:0; left:0; width:100%; height:100%;
-    background: linear-gradient(rgba(0,0,0,0) 50%, rgba(255,255,255,0.1) 50%);
-    background-size: 100% 4px;
-    z-index: 10001; pointer-events: none; opacity: 0;
-    transition: opacity 0.3s;
-}
-/* Broken/Glitchy Background Overlay */
-.glitch-background {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    /* Creates a static noise pattern */
-    background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
-    opacity: 0.15;
-    pointer-events: none;
-    animation: glitchFlicker 0.15s infinite;
-}
+        /* Holographic Radar Pulse Rings */
+        .radar-ring {
+            position: absolute;
+            width: 300px; height: 300px;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 50%;
+            animation: radarPulse 3s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+        }
+        .radar-ring:nth-child(2) { animation-delay: 1.5s; width: 500px; height: 500px; }
 
-@keyframes glitchFlicker {
-    0% { opacity: 0.1; }
-    50% { opacity: 0.25; }
-    100% { opacity: 0.1; }
-}
+        @keyframes radarPulse {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
 
-/* Broken Pixel Shards (JS will spawn these) */
-.pixel-shard {
-    position: absolute;
-    background: var(--neon);
-    width: 4px; height: 4px;
-    pointer-events: none;
-    animation: drop 1s linear forwards;
-}
+        .loader-content {
+            position: relative;
+            z-index: 2;
+            padding: 40px;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            background: rgba(2, 5, 8, 0.85);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.15);
+        }
+        .loader-content h1 { 
+            font-family: 'Audiowide'; color: var(--neon); font-size: 2.2rem; margin-bottom: 15px; 
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.6);
+            letter-spacing: 2px;
+        }
+        .loader-content p { 
+            font-family: 'Rajdhani'; color: #fff; font-size: 1.1rem; text-transform: uppercase; 
+            letter-spacing: 4px; opacity: 0.8; 
+            animation: blinkText 1.5s ease-in-out infinite;
+        }
+        @keyframes blinkText {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; text-shadow: 0 0 10px var(--neon); }
+        }
 
-@keyframes drop {
-    0% { transform: translateY(0); opacity: 1; }
-    100% { transform: translateY(500px); opacity: 0; }
-}
+        .warp-entry {
+            transform: scale(3); 
+            filter: blur(10px) brightness(2); 
+            opacity: 0;
+            transition: transform 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19), opacity 0.6s;
+        }
 
-#mute-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: rgba(30, 25, 20, 0.8);
-    border: 2px solid blue;
-    color: blue;
-    padding: 10px;
-    cursor: pointer;
-    font-size: 1.2rem;
-    z-index: 3000;
-    border-radius: 5px;
-    transition: all 0.3s;
-}
+        .warp-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: linear-gradient(rgba(0,0,0,0) 50%, rgba(255,255,255,0.1) 50%);
+            background-size: 100% 4px;
+            z-index: 10001; pointer-events: none; opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .pixel-shard {
+            position: absolute;
+            background: var(--neon);
+            width: 4px; height: 4px;
+            pointer-events: none;
+            animation: drop 1s linear forwards;
+            z-index: 2;
+        }
+
+        @keyframes drop {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(500px); opacity: 0; }
+        }
+
+        #mute-btn {
+            position: fixed; top: 20px; right: 20px;
+            background: rgba(30, 25, 20, 0.8);
+            border: 2px solid var(--neon); color: var(--neon);
+            padding: 10px; cursor: pointer; font-size: 1.2rem;
+            z-index: 3000; border-radius: 5px; transition: all 0.3s;
+        }
     </style>
 </head>
 <body>
-    <button id="mute-btn" onclick="toggleMute()">🔊</button>
-<div id="audio-overlay" onclick="startSystem()">
-    <div class="loader-content">
-        <h1>CLICK TO INITIALIZE GROUP PORTFOLIO<h1>
-    </div>
-</div>
-<div id="warp-overlay" class="warp-overlay"></div>
+    <!-- 3D Immersive Galaxy Background Canvas -->
+    <canvas id="galaxy-canvas"></canvas>
 
-<audio id="bg-music" loop>
-    <source src="bgmusic.mp3" type="audio/mpeg">
-</audio>
+    <button id="mute-btn" onclick="toggleMute()">🔊</button>
+    
+    <!-- Enhanced Splash Screen Overlay -->
+    <div id="audio-overlay" onclick="startSystem()">
+        <div class="radar-ring"></div>
+        <div class="radar-ring"></div>
+        <div class="loader-content">
+            <h1>GROUP PORTFOLIO</h1>
+            <p>[ Click anywhere to initialize portfolio ]</p>
+        </div>
+    </div>
+    
+    <div id="warp-overlay" class="warp-overlay"></div>
+
+    <audio id="bg-music" loop>
+        <source src="bgmusic.mp3" type="audio/mpeg">
+    </audio>
+
     <div id="vortex-transition"><canvas id="vortex-canvas"></canvas></div>
-    <canvas id="matrix"></canvas>
     
     <h1 class="header">WST BSIT-3C GROUP 6</h1>
 
     <div id="hub">
         <div class="card edge" onclick="select(this)"><img src="Jay.jpg"><a href="Myportfolio.html" class="portfolio-btn">View Portfolio</a></div>
-        <div class="card side" onclick="select(this)"><img src="Me.png"><a href="Myportfolio.html" class="portfolio-btn">View Portfolio</a></div>
+        <div class="card side" onclick="select(this)"><img src="Me.png"><a href="https://valhalla33805.github.io/WSTPortfolio/" class="portfolio-btn">View Portfolio</a></div>
         <div class="card active" onclick="select(this)"><img src="jambi.png"><a href="Myportfolio.html" class="portfolio-btn">View Portfolio</a></div>
         <div class="card side" onclick="select(this)"><img src="Mae.jpg"><a href="Myportfolio.html" class="portfolio-btn">View Portfolio</a></div>
         <div class="card edge" onclick="select(this)"><img src="Rom.jpg"><a href="Myportfolio.html" class="portfolio-btn">View Portfolio</a></div>
     </div>
 
     <section class="about-section">
-    <h2>About Our Group</h2>
-    <p>
-        We are GROUP 6, a collective of passionate learners and aspiring architects of the digital realm. 
-        What began as a shared challenge in the classroom has evolved into a dedicated pursuit of technical 
-        excellence and creative expression. We believe that technology is more than just code; it is a 
-        medium through which we bridge the gap between complex, data-driven logic and fluid, human-centric 
-        design. Every line of code we write, every interface we polish, and every system we deploy is a 
-        testament to our collective growth and our commitment to building meaningful digital experiences. 
-        We aren't just here to write programs—we are here to learn, to innovate, and to support one another 
-        as we navigate the evolving landscape of web development. Welcome to our hub, and thank you for 
-        being a part of our journey.
-    </p>
-</section>
+        <h2>About Our Group</h2>
+        <p>
+            We are GROUP 6, a collective of passionate learners and aspiring architects of the digital realm. 
+            What began as a shared challenge in the classroom has evolved into a dedicated pursuit of technical 
+            excellence and creative expression. We believe that technology is more than just code; it is a 
+            medium through which we bridge the gap between complex, data-driven logic and fluid, human-centric 
+            design. Every line of code we write, every interface we polish, and every system we deploy is a 
+            testament to our collective growth and our commitment to building meaningful digital experiences. 
+            We aren't just here to write programs—we are here to learn, to innovate, and to support one another 
+            as we navigate the evolving landscape of web development. Welcome to our hub, and thank you for 
+            being a part of our journey.
+        </p>
+    </section>
+
     <script>
+        // --- 1. Three.js Immersive 3D Spiral Galaxy Background ---
+        const canvas = document.getElementById('galaxy-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        let galaxyGroup = new THREE.Group();
+        scene.add(galaxyGroup);
+
+        function createMassiveGalaxy() {
+            const count = 90000;
+            const radius = 12; 
+            const branches = 2; 
+            const spin = 1.8;
+            
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(count * 3);
+            const colors = new Float32Array(count * 3);
+
+            const colorCore = new THREE.Color('#ffffff'); 
+            const colorArmInner = new THREE.Color('#00f3ff'); 
+            const colorArmOuter = new THREE.Color('#7000ff'); 
+            const colorDust = new THREE.Color('#d97706'); 
+
+            for (let i = 0; i < count; i++) {
+                const i3 = i * 3;
+                const r = Math.pow(Math.random(), 1.8) * radius;
+                const branchAngle = ((i % branches) / branches) * Math.PI * 2;
+                const spinAngle = r * spin;
+                
+                const randomX = (Math.random() - 0.5) * 0.5 * (r / radius + 0.05);
+                const randomY = (Math.random() - 0.5) * 0.2 * (r / radius + 0.02);
+                const randomZ = (Math.random() - 0.5) * 0.5 * (r / radius + 0.05);
+
+                positions[i3] = Math.cos(branchAngle + spinAngle) * r + randomX;
+                positions[i3 + 1] = randomY;
+                positions[i3 + 2] = Math.sin(branchAngle + spinAngle) * r + randomZ;
+
+                let mixedColor = new THREE.Color();
+                if (r < 1.0) {
+                    mixedColor.copy(colorCore);
+                } else if (r < 4.0) {
+                    mixedColor.lerpColors(colorCore, colorArmInner, r / 4.0);
+                } else {
+                    if (Math.random() > 0.8) {
+                        mixedColor.copy(colorDust);
+                    } else {
+                        mixedColor.lerpColors(colorArmInner, colorArmOuter, r / radius);
+                    }
+                }
+
+                colors[i3] = mixedColor.r;
+                colors[i3 + 1] = mixedColor.g;
+                colors[i3 + 2] = mixedColor.b;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.02,
+                sizeAttenuation: true,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.9
+            });
+
+            const galaxyPoints = new THREE.Points(geometry, material);
+            galaxyGroup.add(galaxyPoints);
+
+            const starCount = 5000;
+            const starGeo = new THREE.BufferGeometry();
+            const starPos = new Float32Array(starCount * 3);
+            
+            for(let j = 0; j < starCount * 3; j += 3) {
+                starPos[j] = (Math.random() - 0.5) * 50;
+                starPos[j+1] = (Math.random() - 0.5) * 50;
+                starPos[j+2] = (Math.random() - 0.5) * 50 - 10;
+            }
+            starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+            const starMat = new THREE.PointsMaterial({ size: 0.05, color: 0xffffff, transparent: true, opacity: 0.6 });
+            const backgroundStars = new THREE.Points(starGeo, starMat);
+            scene.add(backgroundStars);
+        }
+
+        createMassiveGalaxy();
+
+        camera.position.x = 0;
+        camera.position.y = 2.2;
+        camera.position.z = 8.5;
+        camera.lookAt(0, 0, 0);
+
+        // --- Scroll Zoom Logic ---
+        let targetZ = camera.position.z;
+        const minZoom = 3.0;  
+        const maxZoom = 15.0; 
+
+        window.addEventListener('wheel', (event) => {
+            targetZ += event.deltaY * 0.005;
+            targetZ = Math.max(minZoom, Math.min(maxZoom, targetZ));
+        });
+
+        const clock = new THREE.Clock();
+        function animateGalaxy() {
+            requestAnimationFrame(animateGalaxy);
+            const elapsedTime = clock.getElapsedTime();
+            
+            if (galaxyGroup) {
+                galaxyGroup.rotation.y = elapsedTime * 0.02;
+                galaxyGroup.rotation.x = 0.35; 
+            }
+
+            camera.position.z += (targetZ - camera.position.z) * 0.1;
+
+            renderer.render(scene, camera);
+        }
+        animateGalaxy();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- 2. Card Carousel & Functionality ---
         const hub = document.getElementById('hub');
         function select(card) {
-    if (card.classList.contains('active')) return; // Don't do anything if it's already active
+            if (card.classList.contains('active')) return;
 
-    const hub = document.getElementById('hub');
-    const cards = Array.from(document.querySelectorAll('.card'));
-    const clickedIndex = cards.indexOf(card);
-    const diff = clickedIndex - 2;
+            const cards = Array.from(document.querySelectorAll('.card'));
+            const clickedIndex = cards.indexOf(card);
+            const diff = clickedIndex - 2;
 
-    // Shift the order
-    for(let i = 0; i < Math.abs(diff); i++) {
-        if (diff > 0) hub.appendChild(hub.firstElementChild);
-        else hub.prepend(hub.lastElementChild);
-    }
+            for(let i = 0; i < Math.abs(diff); i++) {
+                if (diff > 0) hub.appendChild(hub.firstElementChild);
+                else hub.prepend(hub.lastElementChild);
+            }
 
-    // Update classes instantly
-    document.querySelectorAll('.card').forEach((c, i) => {
-        c.className = 'card';
-        if (i === 2) c.classList.add('active');
-        else if (i === 1 || i === 3) c.classList.add('side');
-        else c.classList.add('edge');
-    });
-}
+            document.querySelectorAll('.card').forEach((c, i) => {
+                c.className = 'card';
+                if (i === 2) c.classList.add('active');
+                else if (i === 1 || i === 3) c.classList.add('side');
+                else c.classList.add('edge');
+            });
+        }
 
         const btns = document.querySelectorAll('.portfolio-btn');
         const vortex = document.getElementById('vortex-transition');
@@ -269,71 +440,52 @@
             draw();
         }
 
-        const canvas = document.getElementById('matrix'), ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        const drops = Array(Math.floor(canvas.width/15)).fill(1);
-        setInterval(() => {
-            ctx.fillStyle = 'rgba(2, 5, 8, 0.05)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#00f3ff';
-            drops.forEach((d, i) => {
-                ctx.fillText('01', i * 15, d * 15);
-                if (d * 15 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            });
-        }, 33);
-              // Add this inside your <script> tag
-function spawnBrokenPixels() {
-    const overlay = document.getElementById('audio-overlay');
-    setInterval(() => {
-        if (!overlay) return;
-        const pixel = document.createElement('div');
-        pixel.className = 'pixel-shard';
-        pixel.style.left = Math.random() * 100 + 'vw';
-        pixel.style.top = Math.random() * 100 + 'vh';
-        overlay.appendChild(pixel);
-        setTimeout(() => pixel.remove(), 1000);
-    }, 100);
-}
+        function spawnBrokenPixels() {
+            const overlay = document.getElementById('audio-overlay');
+            setInterval(() => {
+                if (!overlay) return;
+                const pixel = document.createElement('div');
+                pixel.className = 'pixel-shard';
+                pixel.style.left = Math.random() * 100 + 'vw';
+                pixel.style.top = Math.random() * 100 + 'vh';
+                overlay.appendChild(pixel);
+                setTimeout(() => pixel.remove(), 1000);
+            }, 100);
+        }
+        spawnBrokenPixels();
 
-// Start the effect when the page loads
-spawnBrokenPixels();
+        function startSystem() {
+            const audio = document.getElementById('bg-music');
+            const overlay = document.getElementById('audio-overlay');
+            const warp = document.getElementById('warp-overlay');
+            
+            audio.volume = 0.4;
+            audio.play();
 
-  function startSystem() {
-    const audio = document.getElementById('bg-music');
-    const overlay = document.getElementById('audio-overlay');
-    const warp = document.getElementById('warp-overlay');
-    
-    // 1. Start audio
-    audio.volume = 0.4;
-    audio.play();
+            warp.style.opacity = '1'; 
+            overlay.style.transform = 'skewX(45deg)'; 
+            
+            setTimeout(() => {
+                overlay.classList.add('warp-entry');
+                setTimeout(() => {
+                    overlay.remove();
+                    warp.remove();
+                }, 600);
+            }, 100);
+        }
 
-    // 2. Trigger the "Entry" sequence
-    warp.style.opacity = '1'; // Show scanlines
-    overlay.style.transform = 'skewX(45deg)'; // Screen "tear" effect
-    
-    // 3. Wait for the "tear" to register, then Zoom/Warp in
-    setTimeout(() => {
-        overlay.classList.add('warp-entry');
-        
-        // Final cleanup
-        setTimeout(() => {
-            overlay.remove();
-            warp.remove();
-        }, 600);
-    }, 100);
-}
-function toggleMute() {
-    const audio = document.getElementById('bg-music');
-    const btn = document.getElementById('mute-btn');
-    
-    if (audio.muted) {
-        audio.muted = false;
-        btn.innerHTML = '🔊';
-    } else {
-        audio.muted = true;
-        btn.innerHTML = '🔇';
-    }
-}
+        function toggleMute() {
+            const audio = document.getElementById('bg-music');
+            const btn = document.getElementById('mute-btn');
+            
+            if (audio.muted) {
+                audio.muted = false;
+                btn.innerHTML = '🔊';
+            } else {
+                audio.muted = true;
+                btn.innerHTML = '🔇';
+            }
+        }
     </script>
 </body>
 </html>
